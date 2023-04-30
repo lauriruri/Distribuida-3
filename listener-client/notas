@@ -1,0 +1,22 @@
+listener-client
+
+
+
+0. Básico, se establece la conexión, se intercambian mensajes y se cierra la conexión
+
+
+1. Bucle de aceptación, recepción y envío para cada cliente. Un mismo listener puede atender de forma consecutiva a varios clientes.
+
+2. Muy similar al anterior, pero la respuesta depende del mensaje que ha llegado.
+
+3. El listener acepta una conexión y entonces pasa a atender al cliente correspondiente. Primer protocolo muy elemental: el servidor recibe mensajes hasta que llega el mensaje 'hola', en ese momento envía la respuesta 'adios' y termina la conexión con el cliente. Después, pasa a atender a otro cliente.
+
+4. Similar al anterior pero controlamos la excepción producida por un cliente con contraseña incorrecta.
+
+5. Similar al anterior pero controlamos además las excepciones en la conexión con el cliente.
+
+6. En todas las soluciones anteriores, el servidor sólo podía atender a los clientes de uno en uno. En esta solución generamos  un proceso para atender a cada cliente
+
+7. Muestar que los mensajes son asíncronos. Se puede usar con el listener de 6.
+
+8. Simular mensajes síncronos.
