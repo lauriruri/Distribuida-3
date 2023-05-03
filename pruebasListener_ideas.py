@@ -81,7 +81,6 @@ def comprobar_tiempo(time_para_responder):
     pass
 
 
-
 def presentador(monitor:Monitor, conn, pid, npreguntas, nrespuestas, pregunta, respuesta):
     #persona que propone las preguntas/retos/pruebas
     contador = 0
@@ -118,22 +117,31 @@ def main(ip_address):
     pregunta = manager.list()
     respuestas_personales = manager.list()
 
+    #for i in range(0,N):
+    #    players.append(0)
+    #    respuestas_personales.append(0)
+
+
     with  Listener(address=(ip_address, 6000),
                    authkey=b'secret password') as listener:
         print ('listener starting')
 
         while True:
 
+            #PUEDE PASAR QUE SE CONECTEN 3 A LA VEZ Y SOLO ME CREE 2 PROCESOS??? I.E., MIENTRAS UNO ESTÁ DENTRO
+            #DEL BUCLE, ENTREN DOS Y EL LAST_ACCEPTED 'SE COMA' A UNO.
             while n_players != N-1 : #numero de jugadores que quiero
                 print ('accepting conexions')
 
                 try:
                     conn = listener.accept()
                     print ('connection accepted from', listener.last_accepted)
+                    respuestas_personales.append(0)
                     p = Process(target=jugadores, 
                                 args=(conn,listener.last_accepted, npreguntas, 
-                                      nrespuestas, pregunta, respuestas_personales[i]))
+                                      nrespuestas, pregunta, respuestas_personales[n_players]))
                     players.append(p)
+                    players[n_players]=p
                     n_players += 1
 
                 except AuthenticationError:
@@ -143,7 +151,7 @@ def main(ip_address):
             print ('connection accepted from', listener.last_accepted)
             p = Process(target = presentador , 
                         args=(conn,listener.last_accepted, npreguntas,
-                               nrespuestas, pregunta, respuestas_personales[N-1]))
+                               nrespuestas, pregunta, respuestas_personales))
             players.append(p)
             n_players += 1
 

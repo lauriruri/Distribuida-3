@@ -25,8 +25,8 @@ class Monitor():
 
 
 
-conn,listener.last_accepted, npreguntas, njugadores, nrondas
-listener.accept() = conn
+#conn,listener.last_accepted, npreguntas, njugadores, nrondas
+#listener.accept() = conn
 
 def jugadores(monitor:Monitor, njugadores:Value, npreguntas:Value , nrondas:Value):
     #personas que juegan lo que propone el presentador
@@ -42,6 +42,7 @@ def presentador(monitor:Monitor, njugadores:Value, npreguntas:Value , nrondas:Va
     contador = 0
     while contador != nrondas: 
         contador += 1
+        monitor.wants_preguntar()
 
 '''
 def serve_client(conn, pid, candado, npreguntas, njugadores, nrondas, players):

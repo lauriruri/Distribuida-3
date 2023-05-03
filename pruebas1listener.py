@@ -4,10 +4,13 @@ import sys
 import time
 import random
 
+clientes = []
+
 listener = Listener(address=('127.0.0.1', 6000), authkey=b'secret password')
 print ('listener starting')
 conn = listener.accept()
 print ('connection accepted from', listener.last_accepted)
+
 time.sleep(random.random()*3)
 
 try: 
