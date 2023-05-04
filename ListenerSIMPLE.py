@@ -13,8 +13,8 @@ import time
 import timeit
 import sys
 
-
-N = 3 #numero de rondas = numero de jugadores (?)
+#{N>=2}
+N = 2 #numero de rondas = numero de jugadores (?) 
 
 class Monitor():
     def __init__(self):
@@ -108,11 +108,6 @@ def presentador(monitor, conn, pid, npreguntas, nrespuestas, pregunta, respuesta
    
     conn.send("Game Over")
     conn.close()
-
-
-           
-           
-
        
 
 def main(ip_address):
@@ -122,37 +117,28 @@ def main(ip_address):
     nrespuestas = manager.Value('i', 0) #controlar cuantos jugadores HAN respondido
     nrondas = manager.Value('i',N)
 
-    n_players = -1
+    n_players = 0
     players = manager.list()
     pregunta = manager.list()
     respuestas_personales = [manager.Value('i', 0) for i in range(N)]  #????
 
-    #for i in range(0,N):
-    #    players.append(0)
-    #    respuestas_personales.append(0)
-
-
     with  Listener(address=(ip_address, 6000),
                    authkey=b'secret password') as listener:
         print ('listener starting')
-
-       
-           
-
-       
        
         while True:
             print ('accepting conexions')
             #CUANDO UNA PARTIDA COMIENZA OTROS JUGADORES PUEDEN EMPEZAR UNA NUEVA
-            #ES ESTO UN PROBLEMA??? EL LISTENER SABE DIFERENCIAR LAS PARTIDAS???
+            #ES ESTO UN PROBLEMA??? EL LISTENER SABE DIFERENCIAR LAS PARTIDAS??? NO ES UN PROBLEMA
+
+            #TENEMOS QUE CREAR LOS PROCESOS CON DISTINTOS CANALES DE COMUNICACIÓN (VÉASE PINGPONG)
             try:
                 conn = listener.accept()
-                n_players += 1 # cada vez que accepta un cliente, n_players se aumenta
                 print ('connection accepted from', listener.last_accepted)
                 players.append(listener.last_accepted) #cree la lista con los PID
                
-                print(n_players)
-                       
+                print('esto es n_players: ', n_players)
+                n_players += 1 # cada vez que accepta un cliente, n_players se aumenta
                    
             except AuthenticationError:
                 print ('Connection refused, incorrect password')
@@ -163,16 +149,16 @@ def main(ip_address):
                
                 J = [Process(target=jugadores,
                             args=(monitor, conn,players[i], npreguntas,
-                                  nrespuestas, pregunta, respuestas_personales[i].value)) for i in range(n_players - 1)  ]
+                                  nrespuestas, pregunta, respuestas_personales[i].value)) for i in range(N - 1)  ]
                 print('yeii')
                
                 P = Process(target = presentador,
-                            args = (monitor, conn, players[N], npreguntas,
+                            args = (monitor, conn, players[N-1], npreguntas,
                                     nrespuestas, pregunta, respuestas_personales))
                 for k in J:
                     k.start()
                 P.start()
-                n_players = -1
+                n_players = 0
            
            
            
