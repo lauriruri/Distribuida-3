@@ -5,7 +5,6 @@ import sys
 def client(ip_address):
     try:
         client   = Client(address=(ip_address, 6000), authkey=b'secret')
-        
         role = client.recv()
         
         if role != "question":
@@ -14,6 +13,7 @@ def client(ip_address):
 
         while True:
             if role == "question":
+                client.recv()
                 question = input("Question to be asked: ")
                 answer   = input("Valid answer: ")
                 print("------------------------------")
@@ -41,8 +41,3 @@ if __name__=='__main__':
     client(ip_address)
 
         
-        
-
-
-    
-

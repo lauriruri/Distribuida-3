@@ -1,19 +1,20 @@
 from multiprocessing.connection import Listener
-from multiprocessing import Process, Manager, Array
+from multiprocessing import Process, Manager, Array, Semaphore
 from random import randrange
 import traceback
 import sys
 
 class QuizControl():
     def __init__(self, manager, n_players, pointLimit):
-        #                             Q   A
-        self.QA       = manager.list(["", ""])
-        self.Points   = manager.list([0] * n_players)
-        self.limit    = pointLimit
-        self.running  = manager.Value('i', 1)
+        self.numberP    = n_players
+        #                               Q   A
+        self.QA         = manager.list(["", ""])
+        self.Points     = manager.list([0] * n_players)
+        self.limit      = pointLimit
+        self.running    = manager.Value('i', 1)
         self.question   = manager.Lock()
         self.noquestion = manager.Lock()
-        self.question.lock()
+        self.question.acquire()
         
     def is_running(self):
         return self.running.value == 1
@@ -24,6 +25,9 @@ class QuizControl():
     def sum_point(self, n):
         self.Points[n] += 1
 
+    def printSemaphore(self):
+        print(self.question)
+        
     def lockQuestion(self):
         self.question.acquire()
 
@@ -50,31 +54,37 @@ class QuizControl():
             return False
 
     def __str__(self):
-        return f"{self.QA} | {self.Points} | running: {self.running} | {self.mutex}"
+        return f"{self.QA} | {self.Points} | running: {self.running.value} | {self.question} | {self.noquestion}"
 
-def player(conn, pid, role, n, QC):
+def player(conn, pid, role, n, rounds, QC):
     try:
-        conn.send(role)
-        
+        conn.send(role)        
         if role != "question":
             username = conn.recv()
 
-        while QC.is_running():
+        while QC.is_running() and rounds != 0:
             if role == "question":
-                QC.lockForQuestions()
-                print("locked")
-                
+                QC.lockNoQuestion()
+                conn.send("QA!")
                 question, answer = conn.recv()
-                print("received")
                 QC.set_QA(question, answer)
-                QC.releaseFromQuestions()
-            else:
+                QC.releaseQuestion()
+                
+            else: #la partida no acaba hasta que todos los jugadores hayan obtenido rounds puntos
+                QC.lockQuestion()
+                #sem.acquire()
                 conn.send(QC.get_question())
                 answer = conn.recv()
                 if QC.answer_question(answer, n):
                     conn.send("right!")
+                    rounds = rounds - 1
+                    QC.releaseNoQuestion()
                 else:
                     conn.send("wrong!")
+                    QC.releaseQuestion()
+                #sem.release()
+        if role != "question" and rounds == 0:
+            conn.send("Se acabó la partida! Terminaste en el puesto ") #ver cómo enviar el puesto
                     
     except EOFError:
         print(f"[Server]: Client {pid} disconnected abruptly.")
@@ -95,22 +105,25 @@ def main(ip_address, n_t_players):
     print("      Listener started")
     print("------------------------------")
     
+    rounds = 3
     n_players = 0
     players   = [None] * n_t_players
-    roles     = generateRoles(n_t_players)
+    roles = generateRoles(n_t_players)
     manager   = Manager()
+    QA = QuizControl(manager, n_t_players, 3)
+
     while running:
         try:
             conn         = listener.accept()
             address, pid = listener.last_accepted
             print(f"[Server]: { pid } Connected!")
             
-            QA = QuizControl(manager, n_t_players, 3)
             players[n_players] = Process(target=player
                                          ,args = (conn
                                                   , pid
                                                   , roles[n_players]
                                                   , n_players
+                                                  , rounds
                                                   , QA))
             n_players += 1
             print(f"number of players: {n_players}")
@@ -136,9 +149,9 @@ def activateProcesses(processes):
 
 def generateRoles(n):
     roles = n * ["answer"]
-    roles[randrange(n)] = "question"
+    m = randrange(n)
+    roles[m] = "question"
     return roles
-    
 
 if __name__=='__main__':
     ip_address = "127.0.0.1"
