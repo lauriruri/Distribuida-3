@@ -4,7 +4,7 @@
 Los archivos válidos son:
 client_nuevasversiones.py, main_nuevasversiones.py : contienen el juego.
 
-seleccionar.py, store_app.py : para poner el juego bonito están estos archivos hechos con la librería tkinter. Falta integrarlo en el otro código.
+yesno.py, store_pregunta.py, store_respuesta.py : para poner el juego bonito están estos archivos hechos con la librería tkinter. Falta integrarlo en el otro código.
 
 ## Cómo funciona el juego
 Los jugadores se connectan a la sala y se crea un proceso para cada uno. Cuándo hay el número de jugadores requirido, la sala cierra. Se distribuyen los papeles, uno es el que hace las preguntas y los otros responden.
