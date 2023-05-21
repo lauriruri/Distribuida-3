@@ -34,7 +34,9 @@ class myGraph:
     def store_texts(self):
         self.text1 = self.entry1.get()
         self.text2 = self.entry2.get()
-        if self.text2 and len(self.text2.split()) >= 2:
+        #dar más opciones  if self.text2 and len(self.text2.split()) >= 2:
+        #dar una respuesta
+        if self.text2 and self.text2 :
             self.data.append(self.text1)
             self.data.append(self.text2)
             self.root.destroy()
