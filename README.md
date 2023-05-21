@@ -1,7 +1,7 @@
 # Distribuida- Práctica 3- Juego de preguntas
 
 ## Válidos archivos
-Por ahora los archivos válidos son:
+Los archivos válidos son:
 client_nuevasversiones.py, main_nuevasversiones.py : contienen el juego.
 
 seleccionar.py, store_app.py : para poner el juego bonito están estos archivos hechos con la librería tkinter. Falta integrarlo en el otro código.
