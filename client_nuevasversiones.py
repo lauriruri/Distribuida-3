@@ -3,6 +3,7 @@ import traceback
 import sys
 
 def client(ip_address):
+    running = True
     try:
         client   = Client(address=(ip_address, 6000), authkey=b'secret')
         role = client.recv()
@@ -11,25 +12,37 @@ def client(ip_address):
             username = input("username: ")            
             client.send(username)
 
-        while True:
+        while running:
             if role == "question":
-                client.recv()
-                question = input("Question to be asked: ")
-                answer   = input("Valid answer: ")
-                print("------------------------------")
-                client.send([question, answer])
+                message = client.recv()
+                print(f"the message is: {message}")
+                if "gracias" in message:
+                    print(message)
+                    client.close()
+                    running = False
+
+                else:
+                    question = input("Question to be asked: ")
+                    answer   = input("Valid answer: ")
+                    print("------------------------------")
+                    client.send([question, answer])
             
             else:
-                question = client.recv()
-                print(question)
-                answer = input("Answer to the question: ")
-                client.send(answer)
-                result = client.recv()
-                print(result)
+                message = client.recv()
+                if "termino" in message:
+                    print(message)
+                    client.close()
+                    running = False
 
-        client.close()
+                else:
+                    print(message)
+                    answer = input("Answer to the question: ")
+                    client.send(answer)
+                    result = client.recv()
+                    print(result)
 
     except Exception as e:
+        traceback.print_exc()
         print(e)
         print(type(e))
 

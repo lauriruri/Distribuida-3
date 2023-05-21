@@ -9,24 +9,17 @@ class QuizControl():
         self.numberP    = n_players
         #                               Q   A
         self.QA         = manager.list(["", ""])
-        self.Points     = manager.list([0] * n_players)
         self.limit      = pointLimit
-        self.running    = manager.Value('i', 1)
+        self.points     = manager.dict()
         self.question   = manager.Lock()
         self.noquestion = manager.Lock()
         self.question.acquire()
-        
-    def is_running(self):
-        return self.running.value == 1
 
-    def stop(self):
-        self.running.value = 0
+    def sum_point(self, username):
+        self.points[username] += 1
 
-    def sum_point(self, n):
-        self.Points[n] += 1
-
-    def printSemaphore(self):
-        print(self.question)
+    def add_user_to_points(self, username):
+        self.points[username] = 0
         
     def lockQuestion(self):
         self.question.acquire()
@@ -54,50 +47,66 @@ class QuizControl():
             return False
 
     def __str__(self):
-        return f"{self.QA} | {self.Points} | running: {self.running.value} | {self.question} | {self.noquestion}"
+        return f"{self.QA} | {self.points} | {self.question} | {self.noquestion}"
 
-def player(conn, pid, role, n, rounds, QC):
+def player(conn, pid, role, n, max_points, QC, n_t_players):
     try:
         conn.send(role)        
         if role != "question":
             username = conn.recv()
+            QC.add_user_to_points(username)
 
-        while QC.is_running() and rounds != 0:
+        while max_points not in QC.points.values():
             if role == "question":
                 QC.lockNoQuestion()
+                
+                if max_points in QC.points.values():
+                    QC.releaseNoQuestion()
+                    QC.releaseQuestion()
+                    break
+
                 conn.send("QA!")
                 question, answer = conn.recv()
                 QC.set_QA(question, answer)
                 QC.releaseQuestion()
                 
-            else: #la partida no acaba hasta que todos los jugadores hayan obtenido rounds puntos
+            else:
                 QC.lockQuestion()
-                #sem.acquire()
+                
+                if max_points in QC.points.values():
+                    QC.releaseQuestion()
+                    break
+
                 conn.send(QC.get_question())
                 answer = conn.recv()
+                
                 if QC.answer_question(answer, n):
+                    QC.sum_point(username)
                     conn.send("right!")
-                    rounds = rounds - 1
                     QC.releaseNoQuestion()
                 else:
                     conn.send("wrong!")
                     QC.releaseQuestion()
-                #sem.release()
-        if role != "question" and rounds == 0:
-            conn.send("Se acabó la partida! Terminaste en el puesto ") #ver cómo enviar el puesto
+
+        if role != "question":
+            conn.send(f"termino {QC.points}")
+            conn.close()
+
+        elif role == "question":
+            conn.send("Muchas gracias por jugar :)")
+            conn.close()
                     
     except EOFError:
         print(f"[Server]: Client {pid} disconnected abruptly.")
         running = False
 
     except Exception as e:
-        print(f"Something went wrong | {pid}, {role}, {n}, {QC}")
-        print(e)
+        print(f"Something went wrong | {pid}, {role}, {n}")
+        print(QC)
+        print(f"error: {e}")
+        print(type(e))
         running = False
-            
-    conn.close()
     
-
 def main(ip_address, n_t_players):
     running  = True
     listener = Listener(address=(ip_address, 6000)
@@ -105,7 +114,7 @@ def main(ip_address, n_t_players):
     print("      Listener started")
     print("------------------------------")
     
-    rounds = 3
+    maxPoints = 3
     n_players = 0
     players   = [None] * n_t_players
     roles = generateRoles(n_t_players)
@@ -123,8 +132,9 @@ def main(ip_address, n_t_players):
                                                   , pid
                                                   , roles[n_players]
                                                   , n_players
-                                                  , rounds
-                                                  , QA))
+                                                  , maxPoints
+                                                  , QA
+                                                  ,n_t_players))
             n_players += 1
             print(f"number of players: {n_players}")
             
@@ -158,3 +168,4 @@ if __name__=='__main__':
     if len(sys.argv) > 1:
         ip_address = sys.argv[1]
     main(ip_address, 3)
+    #aqui ponemos el numero de jugadores que queremos que haya
