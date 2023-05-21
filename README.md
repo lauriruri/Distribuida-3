@@ -8,7 +8,7 @@ seleccionar.py, store_app.py : para poner el juego bonito están estos archivos 
 
 ## Cómo funciona el juego
 Los jugadores se connectan a la sala y se crea un proceso para cada uno. Cuándo hay el número de jugadores requirido, la sala cierra. Se distribuyen los papeles, uno es el que hace las preguntas y los otros responden.
-El jugador que tiene el papel "question" propone una pregunta. Los otros esperan la pregunta y después responden. 
+El jugador que tiene el papel "question" propone una pregunta. Los otros esperan la pregunta y después responden. La pregunta se envía a un jugador: si este acierta, se lleva punto y se solicita otra pregunta al preguntador; si falla, esta pregunta 'rebota' y se enva a otro jugador.
 
 ## Lista de Funciones en la clase QuizControl
 - _ _init_ _ (self, manager, n_players, pointLimit): 
